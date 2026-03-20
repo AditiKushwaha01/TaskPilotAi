@@ -1,156 +1,216 @@
-# 🚀 Project Name
+# 🚀 TaskPilot AI
 
-> A modern full-stack web application built with performance, scalability, and great UX in mind.
+### AI Meeting → Task Execution Agent
+
+TaskPilot AI is a multi-agent system that transforms meeting discussions into actionable tasks, assigns ownership, tracks execution, and ensures accountability — automatically.
+
+Built for **ET AI Hackathon 2026 (Problem Statement #2: Agentic AI for Autonomous Enterprise Workflows)**.
 
 ---
 
-## 🧠 Problem Statement
+## 🧠 Problem
 
-Briefly describe the problem you're solving.
+In most organizations:
 
-> Example:
-> In today’s fast-paced world, users struggle with **[insert problem]** due to **[reason]**. This leads to **[impact]**.
+* Meetings generate decisions but not execution
+* Tasks are forgotten or unclear
+* Follow-ups are manual and inconsistent
+* No audit trail exists for accountability
+
+This leads to missed deadlines, inefficiency, and poor workflow visibility.
 
 ---
 
 ## 💡 Solution
 
-Explain your idea clearly:
+TaskPilot AI introduces an **AI-powered multi-agent workflow system** that:
 
-> We built **Project Name**, a solution that helps users **[main benefit]** by providing:
-
-* ⚡ Fast and responsive interface
-* 🔒 Secure and scalable backend
-* 🎯 Simple and intuitive user experience
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-* ⚛️ React + TypeScript
-* ⚡ Vite
-* 🎨 CSS / Tailwind (if used)
-
-### Backend *(to be added)*
-
-* 🟢 Java 
-* 🚀 Spring Boot
-* Python 
-
-### Other Tools
-
-* 🗄️ Database: (MongoDB )
-* 🔧 Git & GitHub
-* ☁️ Deployment: (Vercel / Render / etc.)
+1. Extracts tasks from meeting transcripts
+2. Assigns owners and deadlines
+3. Tracks task progress
+4. Sends reminders for upcoming deadlines
+5. Escalates overdue tasks automatically
+6. Maintains a full audit trail of actions
 
 ---
 
-## ✨ Features till now
+## 🤖 AI Agents
 
-* ✅ Feature 1 (e.g., User authentication)
-* ✅ Feature 2 (e.g., Real-time updates)
-* ✅ Feature 3 (e.g., Responsive design)
-* ✅ Feature 4 (e.g., API integration)
+The system is powered by multiple specialized agents:
+
+* 🧠 **Task Extraction Agent**
+  Converts meeting transcripts into structured tasks
+
+* ⏰ **Reminder Agent**
+  Monitors deadlines and sends alerts
+
+* 🚨 **Escalation Agent**
+  Detects overdue tasks and escalates them
+
+* 📊 **Audit Agent**
+  Logs every action for transparency and traceability
 
 ---
 
-## 📂 Project Structure
+## 🏗️ Architecture
 
 ```
-project-root/
-├── frontend/        # React + TypeScript app
-├── backend/         # API server (Node/Express)
-└── README.md
+Frontend (React + Framer UI)
+        ↓
+Backend (Spring Boot)
+        ↓
+AI Service (Python + FastAPI)
+        ↓
+Database (MongoDB / SQL)
 ```
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ Tech Stack
 
-### 1. Clone the repository
+* **Frontend:** React.js, Framer (UI/UX)
+* **Backend:** Java Spring Boot
+* **AI Layer:** Python (FastAPI)
+* **AI Model:** OpenAI GPT (task extraction)
+* **Database:** MongoDB / MySQL
+
+---
+
+## ✨ Features
+
+### 📝 Meeting Input
+
+* Paste meeting transcripts
+* Upload `.txt` files
+* Simulated live meeting input
+
+### 🤖 AI Task Generation
+
+* Extracts tasks, owners, deadlines
+* Structured JSON output
+
+### 📋 Task Dashboard
+
+* View and manage all tasks
+* Status updates (Pending, In Progress, Completed, Escalated)
+* Filters and search
+
+### ⏰ Smart Reminders
+
+* Detects upcoming deadlines
+* Sends notifications (simulated)
+
+### 🚨 Auto Escalation
+
+* Flags overdue tasks
+* Escalates to higher authority (simulated)
+
+### 📊 Activity Logs
+
+* Full audit trail of all system actions
+
+---
+
+## 🧪 Demo Flow
+
+1. Paste meeting transcript
+2. Click **Generate Tasks**
+3. AI extracts and displays tasks
+4. Tasks are assigned and tracked
+5. System triggers reminders and escalations
+
+---
+
+## 🔮 Future Scope
+
+* Integration with Zoom / Google Meet / Microsoft Teams
+* Real-time speech-to-text using Whisper API
+* Email / Slack notifications
+* Role-based access control
+* Advanced analytics dashboard
+
+---
+
+## 📦 Setup Instructions
+
+### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/project-name.git
-cd project-name
+git clone https://github.com/your-username/taskpilot-ai.git
+cd taskpilot-ai
 ```
 
 ---
 
-### 2. Setup Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-### 3. Setup Backend (if applicable)
+### 2. Backend (Spring Boot)
 
 ```bash
 cd backend
+mvn spring-boot:run
+```
+
+---
+
+### 3. AI Service (Python)
+
+```bash
+cd ai-service
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+---
+
+### 4. Frontend (React)
+
+```bash
+cd frontend
 npm install
 npm start
 ```
 
 ---
 
-## 🔌 API Endpoints (Optional)
+## 🔑 Environment Variables
 
-| Method | Endpoint     | Description |
-| ------ | ------------ | ----------- |
-| GET    | /api/example | Fetch data  |
-| POST   | /api/example | Create data |
+Create a `.env` file in the AI service:
 
----
-
-## 📸 Screenshots
-
-<img width="1349" height="649" alt="image" src="https://github.com/user-attachments/assets/7b6748fc-a8db-4693-bc06-4d4a4adbc1b9" />
-
+```
+OPENAI_API_KEY=your_api_key_here
+```
 
 ---
 
-## 🌍 Future Scope
+## 📈 Impact
 
-* 🚀 Add more features
-* 📱 Mobile responsiveness improvements
-* 🤖 AI integration (optional)
-* 🔐 Advanced authentication
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-Feel free to fork this repo and submit a pull request.
+* ⏱️ Reduces manual follow-ups by ~70%
+* 📉 Minimizes missed tasks and delays
+* 📊 Improves accountability with audit logs
+* ⚡ Accelerates workflow execution
 
 ---
 
-## 🏆 Hackathon Highlights
+## 🎥 Submission Includes
 
-* 💡 Innovative idea solving real-world problem
-* ⚡ Built within limited time with scalable architecture
-* 🎯 Focused on usability and performance
+* ✅ Working prototype
+* ✅ GitHub repository
+* ✅ 3-minute demo video
+* ✅ Architecture diagram
+* ✅ Impact model
 
 ---
 
-## 👨‍💻 Team / Author
+## 👨‍💻 Team
 
 * Your Name
-* GitHub: https://github.com/your-username
+* Team Members (if any)
 
 ---
 
-## 📜 License
+## 🏁 Conclusion
 
-This project is licensed under the MIT License.
+TaskPilot AI focuses on the **execution gap after meetings**, turning conversations into completed actions using intelligent, autonomous agents.
 
 ---
 
-## ⭐ Show Your Support
-
-If you like this project, give it a ⭐ on GitHub!
+⭐ If you like this project, feel free to star the repo!
