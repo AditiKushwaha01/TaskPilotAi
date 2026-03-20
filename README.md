@@ -202,8 +202,7 @@ OPENAI_API_KEY=your_api_key_here
 
 ## 👨‍💻 Team
 
-* Your Name
-* Team Members (if any)
+* Aditi Kushwaha
 
 ---
 
