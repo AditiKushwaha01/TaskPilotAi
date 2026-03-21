@@ -1,7 +1,15 @@
+export type TaskStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "DELAYED"
+  | "REJECTED";
+
 export type Task = {
-  name: string;
+  id: number;
+  title?: string;
+  name?: string;
   owner: string;
+  status: TaskStatus; // ✅ strict type
   deadline?: string;
-  status: "Pending" | "In Progress" | "Completed" | "Escalated";
   priority?: "Low" | "Medium" | "High";
 };

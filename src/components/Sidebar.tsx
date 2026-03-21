@@ -5,7 +5,7 @@ export default function Sidebar({ setActiveTab }: any) {
   const navigate = useNavigate();
   const menu = [
     { name: "Dashboard", key: "dashboard" },
-    { name: "Meetings", key: "meeting" },
+    { name: "New Meetings", key: "meeting" },
     { name: "Tasks", key: "tasks" },
     { name: "Activity Logs", key: "logs" },
   ];
