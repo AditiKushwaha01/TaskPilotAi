@@ -1,161 +1,168 @@
 import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Task } from "../types/task";
-import { motion } from "framer-motion";
 import { getTasks, updateTaskStatus } from "../services/api";
 
-export default function TaskTable({
-  refresh,
-  tasks: externalTasks,
-}: {
+type Props = {
   refresh?: number;
   tasks?: Task[];
-}) {
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  COMPLETED: "bg-green-100 text-green-700",
+  PENDING: "bg-yellow-100 text-yellow-700",
+  DELAYED: "bg-red-100 text-red-600",
+  REJECTED: "bg-gray-200 text-gray-500",
+};
+
+const PRIORITY_STYLES: Record<string, string> = {
+  High: "bg-red-50 text-red-600",
+  Medium: "bg-yellow-50 text-yellow-600",
+  Low: "bg-green-50 text-green-600",
+};
+
+export default function TaskTable({ refresh, tasks: externalTasks }: Props) {
   const [tasks, setTasks] = useState<Task[]>(externalTasks || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  // 🔥 Only fetch if tasks NOT passed
   const fetchTasks = useCallback(async () => {
-    if (externalTasks) return; // ✅ skip fetch if controlled
-
+    if (externalTasks) return;
     setLoading(true);
     setError(null);
-
     try {
       const data = await getTasks();
       setTasks(data || []);
     } catch (err: any) {
-      console.error(err);
       setError(err.message || "Failed to fetch tasks");
     } finally {
       setLoading(false);
     }
   }, [externalTasks]);
 
-  // 🔥 Sync external tasks
   useEffect(() => {
-    if (externalTasks) {
-      setTasks(externalTasks);
-    }
+    if (externalTasks) setTasks(externalTasks);
   }, [externalTasks]);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks, refresh]);
 
-  // 🔥 Update status
   const handleUpdate = async (id: number, status: Task["status"]) => {
-  try {
-    await updateTaskStatus(id, status);
-
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, status } : t
-      )
-    );
-
-    if (!externalTasks) fetchTasks();
-
-  } catch (err: any) {
-    alert(err.message);
-  }
-};
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return "bg-green-100 text-green-600";
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-600";
-      case "DELAYED":
-        return "bg-red-100 text-red-600";
-      case "REJECTED":
-        return "bg-gray-200 text-gray-600";
-      default:
-        return "bg-gray-100 text-gray-600";
+    setUpdatingId(id);
+    try {
+      await updateTaskStatus(id, status);
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUpdatingId(null);
     }
   };
 
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+  if (loading) return (
+    <div className="space-y-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+      ))}
+    </div>
+  );
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-lg">Tasks</h2>
-        <span className="text-sm text-gray-500">
+  if (error) return (
+    <div className="text-red-500 text-sm p-3 bg-red-50 rounded-xl">{error}</div>
+  );
+
+  if (!tasks.length) return (
+    <div className="text-center py-10 text-gray-400 text-sm">
+      <p className="text-3xl mb-2">✓</p>
+      <p>No tasks yet. Process a meeting to generate tasks.</p>
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
+        <h2 className="font-semibold text-sm">Tasks</h2>
+        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">
           {tasks.length} total
         </span>
       </div>
 
-      {loading && (
-        <p className="text-sm text-gray-500">Loading tasks...</p>
-      )}
-
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
-
-      {!loading && !error && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-gray-500 border-b">
-                <th className="text-left py-3">Task</th>
-                <th className="text-left py-3">Owner</th>
-                <th className="text-left py-3">Status</th>
-                <th className="text-left py-3">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+              <th className="text-left px-5 py-3 font-medium">Task</th>
+              <th className="text-left px-5 py-3 font-medium">Owner</th>
+              <th className="text-left px-5 py-3 font-medium">Priority</th>
+              <th className="text-left px-5 py-3 font-medium">Deadline</th>
+              <th className="text-left px-5 py-3 font-medium">Status</th>
+              <th className="text-left px-5 py-3 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence>
               {tasks.map((t) => (
                 <motion.tr
                   key={t.id}
-                  whileHover={{ scale: 1.01 }}
-                  className="border-b last:border-none"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="border-b border-gray-50 last:border-none hover:bg-gray-50/50 transition-colors"
                 >
-                  <td className="py-4 font-medium">
+                  <td className="px-5 py-3.5 font-medium text-gray-800">
                     {t.title || t.name}
                   </td>
-
-                  <td className="py-4 text-gray-600">
-                    {t.owner}
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                        {(t.owner?.[0] || "?").toUpperCase()}
+                      </div>
+                      <span className="text-gray-600 text-xs">{t.owner}</span>
+                    </div>
                   </td>
-
-                  <td className="py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(
-                        t.status
-                      )}`}
-                    >
+                  <td className="px-5 py-3.5">
+                    <span className={`text-xs px-2 py-1 rounded-lg font-medium ${PRIORITY_STYLES[t.priority || "Medium"]}`}>
+                      {t.priority || "Medium"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-xs text-gray-400 font-mono">
+                    {t.deadline || "—"}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_STYLES[t.status] || "bg-gray-100 text-gray-500"}`}>
                       {t.status}
                     </span>
                   </td>
-
-                  <td className="py-4 space-x-2">
-                    {t.status !== "COMPLETED" && (
-                      <button
-                        onClick={() => handleUpdate(t.id, "COMPLETED")}
-                        className="text-green-600 text-xs"
-                      >
-                        Done
-                      </button>
-                    )}
-
-                    {t.status !== "REJECTED" && (
-                      <button
-                        onClick={() => handleUpdate(t.id, "REJECTED")}
-                        className="text-red-600 text-xs"
-                      >
-                        Reject
-                      </button>
-                    )}
+                  <td className="px-5 py-3.5">
+                    <div className="flex gap-2">
+                      {t.status !== "COMPLETED" && (
+                        <button
+                          onClick={() => handleUpdate(t.id, "COMPLETED")}
+                          disabled={updatingId === t.id}
+                          className="text-xs text-green-600 hover:text-green-800 font-medium disabled:opacity-40 transition"
+                        >
+                          Done
+                        </button>
+                      )}
+                      {t.status !== "REJECTED" && (
+                        <button
+                          onClick={() => handleUpdate(t.id, "REJECTED")}
+                          disabled={updatingId === t.id}
+                          className="text-xs text-red-400 hover:text-red-600 font-medium disabled:opacity-40 transition"
+                        >
+                          Reject
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </motion.tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

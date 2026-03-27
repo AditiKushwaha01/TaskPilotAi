@@ -1,17 +1,29 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../components/Sidebar";
 import MeetingChat from "../components/MeetingChat";
 import TaskTable from "../components/TaskTable";
 import NotificationPanel from "../components/NotificationPannel";
+import ActivityLogs from "../components/ActivityLogs";
+import Agents from "../components/Agents";
+import Escalations from "../components/Escalations";
+import MeetingList from "../components/MeetingList";
+import type { Task } from "../types/task";
+
+const STATS = [
+  { label: "Total Meetings", value: "12", icon: "🗓", color: "text-indigo-600" },
+  { label: "Upcoming",       value: "3",  icon: "⏳", color: "text-yellow-600" },
+  { label: "Tasks Pending",  value: "8",  icon: "📋", color: "text-blue-600" },
+  { label: "Completed",      value: "47", icon: "✅", color: "text-green-600" },
+];
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [activeTab, setActiveTab]             = useState("dashboard");
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showMeetingModal, setShowMeetingModal] = useState(false);
-  const [refresh, setRefresh] = useState(0);
-  const [tasks, setTasks] = useState([]);
+  const [showMeetingModal, setShowMeetingModal]   = useState(false);
+  const [refresh, setRefresh]                 = useState(0);
+  const [tasks]                               = useState<Task[]>([]);
 
   const handleTasksGenerated = () => {
     setRefresh((prev) => prev + 1);
@@ -19,199 +31,197 @@ export default function Dashboard() {
     setActiveTab("dashboard");
   };
 
+  const tabLabel: Record<string, string> = {
+    dashboard: "Dashboard",
+    meeting:   "New Meeting",
+    tasks:     "Tasks",
+    logs:      "Activity Logs",
+    agents:    "Agents",
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
 
       {/* MOBILE SIDEBAR */}
-      {sidebarOpen && (
-        <motion.div
-          initial={{ x: -300 }}
-          animate={{ x: 0 }}
-          className="fixed inset-0 z-50 flex"
-        >
-          <div className="w-64 bg-white shadow-xl p-4">
-            <Sidebar setActiveTab={setActiveTab} />
-          </div>
-
-          <div
-            className="flex-1 bg-black/40"
-            onClick={() => setSidebarOpen(false)}
-          />
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex md:hidden"
+          >
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-64 bg-white shadow-2xl"
+            >
+              <Sidebar setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false); }} activeTab={activeTab} />
+            </motion.div>
+            <div className="flex-1 bg-black/40" onClick={() => setSidebarOpen(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* DESKTOP SIDEBAR */}
-      <div className="hidden md:block w-64 bg-white shadow-md">
-        <Sidebar setActiveTab={setActiveTab} />
+      <div className="hidden md:block w-64 flex-shrink-0 bg-white shadow-sm">
+        <Sidebar setActiveTab={setActiveTab} activeTab={activeTab} />
       </div>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* TOPBAR */}
-        <div className="flex justify-between items-center px-6 py-4 bg-white border-b">
-          <div className="flex items-center gap-4">
+        <div className="flex justify-between items-center px-5 py-3.5 bg-white border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-center gap-3">
             <button
-              className="md:hidden text-2xl"
+              className="md:hidden text-gray-500 hover:text-black text-xl transition"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
             >
               ☰
             </button>
-
-            <h1
-              onClick={() => setActiveTab("dashboard")}
-              className="text-xl font-bold cursor-pointer"
-            >
-              TaskPilot
-            </h1>
+            <div>
+              <h1 className="text-sm font-semibold">{tabLabel[activeTab] || "Dashboard"}</h1>
+              <p className="text-xs text-gray-400 hidden sm:block">TaskPilot AI · 6 agents active</p>
+            </div>
           </div>
 
-    <div className="relative">
-  <button
-    onClick={() => setShowNotifications((prev) => !prev)}
-    className="px-3 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition relative"
-  >
-    🔔
+          <div className="flex items-center gap-2">
+            {/* NOTIFICATION BELL */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications((p) => !p)}
+                className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition"
+                aria-label="Notifications"
+              >
+                <span className="text-base">🔔</span>
+                {tasks.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {tasks.length}
+                  </span>
+                )}
+              </button>
 
-    {/* 🔥 Badge (optional but powerful) */}
-    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-      {tasks?.length || 0}
-    </span>
-  </button>
+              <AnimatePresence>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 z-50">
+                    <NotificationPanel
+                      tasks={tasks}
+                      onClose={() => setShowNotifications(false)}
+                    />
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
 
-  {/* 🔥 Dropdown panel */}
-  {showNotifications && (
-    <div className="absolute right-0 mt-2 z-50">
-      <NotificationPanel tasks={tasks} />
-    </div>
-  )}
-</div>
-
-
-          {/* 🔥 FIXED BUTTON */}
-          <button
-            onClick={() => setShowMeetingModal(true)}
-            className="bg-black text-white px-4 py-2 rounded-xl hover:scale-105 transition"
-          >
-            + New Meeting
-          </button>
+            {/* NEW MEETING */}
+            <button
+              onClick={() => setShowMeetingModal(true)}
+              className="bg-black text-white text-sm px-4 py-2 rounded-xl hover:bg-gray-800 transition flex items-center gap-1.5"
+            >
+              <span>＋</span>
+              <span className="hidden sm:inline">New Meeting</span>
+            </button>
+          </div>
         </div>
 
         {/* CONTENT */}
-        <div className="p-6 space-y-6 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
-          {/* DASHBOARD */}
+          {/* DASHBOARD TAB */}
           {activeTab === "dashboard" && (
             <>
-              {/* STATS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card title="Meetings" value="12" />
-                <Card title="Upcoming" value="3" />
-                <Card title="Tasks Pending" value="--" />
-                <Card title="Completed" value="--" />
+              {/* STATS GRID */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {STATS.map((s, i) => (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                    whileHover={{ y: -2 }}
+                    className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xl">{s.icon}</span>
+                    </div>
+                    <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                    <p className="text-xs text-gray-400 mt-1">{s.label}</p>
+                  </motion.div>
+                ))}
               </div>
 
-              <Performance />
+              {/* AGENTS */}
+              <Agents />
 
-              {/* 🔥 EMPTY STATE (VERY IMPORTANT UX) */}
-              <EmptyState onCreate={() => setShowMeetingModal(true)} />
+              {/* ESCALATIONS */}
+              <Escalations />
 
+              {/* MEETING LIST */}
+              <div>
+                <h2 className="text-sm font-semibold mb-3 text-gray-700">Recent Meetings</h2>
+                <MeetingList />
+              </div>
+
+              {/* TASK TABLE */}
               <TaskTable refresh={refresh} />
             </>
           )}
 
-          {/* KEEP TAB FLOW */}
           {activeTab === "meeting" && (
-            <MeetingChat onDone={handleTasksGenerated} />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h2 className="font-semibold mb-4">Process Meeting Transcript</h2>
+              <MeetingChat onDone={handleTasksGenerated} />
+            </div>
           )}
 
-          {activeTab === "tasks" && (
-            <TaskTable refresh={refresh} />
-          )}
+          {activeTab === "tasks" && <TaskTable refresh={refresh} />}
 
           {activeTab === "logs" && <ActivityLogs />}
+
+          {activeTab === "agents" && <Agents />}
         </div>
       </div>
 
-      {/* 🔥 MODAL (PRIMARY UX) */}
-      {showMeetingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      {/* MEETING MODAL */}
+      <AnimatePresence>
+        {showMeetingModal && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowMeetingModal(false); }}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">New Meeting</h2>
-              <button
-                onClick={() => setShowMeetingModal(false)}
-                className="text-gray-500"
-              >
-                ✕
-              </button>
-            </div>
-
-            <MeetingChat onDone={handleTasksGenerated} />
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <div>
+                  <h2 className="font-semibold">New Meeting</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Paste transcript · AI agents extract tasks automatically</p>
+                </div>
+                <button
+                  onClick={() => setShowMeetingModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6">
+                <MeetingChat onDone={handleTasksGenerated} />
+              </div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* 🔥 NEW EMPTY STATE COMPONENT */
-function EmptyState({ onCreate }: { onCreate: () => void }) {
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
-      <p className="text-gray-600 mb-4">
-        No recent meetings processed
-      </p>
-      <button
-        onClick={onCreate}
-        className="bg-black text-white px-4 py-2 rounded"
-      >
-        Create New Meeting
-      </button>
-    </div>
-  );
-}
-
-/* EXISTING COMPONENTS */
-
-function Card({ title, value }: { title: string; value: string }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      className="p-5 bg-white rounded-2xl shadow-sm hover:shadow-md transition"
-    >
-      <h3 className="text-gray-500 text-sm">{title}</h3>
-      <p className="text-2xl font-bold mt-2">{value}</p>
-    </motion.div>
-  );
-}
-
-function Performance() {
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
-      <h2 className="font-semibold mb-4">Performance Overview</h2>
-      <div className="space-y-2 text-sm text-gray-600">
-        <p>✔ Tasks completed this year: 120</p>
-        <p>⏳ Pending tasks: 8</p>
-        <p>⚠ Delayed tasks: 2</p>
-      </div>
-    </div>
-  );
-}
-
-function ActivityLogs() {
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
-      <h2 className="font-semibold mb-4">Activity Logs</h2>
-      <div className="space-y-3 text-sm text-gray-600">
-        <div>✅ Task completed: Design UI</div>
-        <div>📅 Meeting created: Sprint Planning</div>
-        <div>⚠ Task delayed: API Integration</div>
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
