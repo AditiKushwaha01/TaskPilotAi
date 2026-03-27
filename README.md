@@ -61,7 +61,7 @@ Backend (Spring Boot)
         ↓
 AI Service (Python + FastAPI)
         ↓
-Database (MongoDB / SQL)
+Database (MongoDB)
 ```
 
 ---
@@ -71,8 +71,8 @@ Database (MongoDB / SQL)
 * **Frontend:** React.js, Framer (UI/UX)
 * **Backend:** Java Spring Boot
 * **AI Layer:** Python (FastAPI)
-* **AI Model:** OpenAI GPT (task extraction)
-* **Database:** MongoDB / MySQL
+* **AI Model:** Gemini AI (task extraction)
+* **Database:** MongoDB
 
 ---
 
@@ -176,7 +176,7 @@ npm start
 Create a `.env` file in the AI service:
 
 ```
-OPENAI_API_KEY=your_api_key_here
+GEMINI_API_KEY=your_api_key_here
 ```
 
 ---
