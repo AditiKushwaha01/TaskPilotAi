@@ -9,7 +9,8 @@ TaskPilot AI is a **multi-agent AI system** that transforms meeting discussions 
 ---
 
 ## 🌐 Live Demo  
-🔗 [![Watch TaskPilot AI Demo](https://img.youtube.com/vi/SYe-8vEXQDI/0.jpg)](https://youtu.be/SYe-8vEXQDI)
+🔗 
+[![Watch TaskPilot AI Demo](https://img.youtube.com/vi/SYe-8vEXQDI/0.jpg)](https://youtu.be/SYe-8vEXQDI)
 
 ---
 
@@ -72,7 +73,7 @@ AI Service (Python + FastAPI)
 ↓
 Database (MongoDB)
 ```
-![TaskPilot AI Architecture](./assets/architecture.png)
+![TaskPilot AI Architecture](./frontend/src/tp.png)
 ---
 
 ## ⚙️ Tech Stack
