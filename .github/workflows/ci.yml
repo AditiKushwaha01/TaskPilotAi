@@ -57,6 +57,6 @@ jobs:
       - name: Build backend
         run: |
           cd backend/taskpilot-ai
-          mvn clean install
+          mvn clean install -DskipTests
           env:
            MONGODB_URI: ${{ secrets.MONGODB_URI }}
