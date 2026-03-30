@@ -56,5 +56,5 @@ jobs:
 
       - name: Build backend
         run: |
-          cd backend
-          mvn clean install
+          working-directory: backend/taskpilot-ai
+          run: mvn clean install
