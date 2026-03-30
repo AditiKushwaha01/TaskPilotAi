@@ -7,6 +7,7 @@ import org.backend.taskpilot_ai.dto.TaskDTO;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
