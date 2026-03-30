@@ -15,13 +15,14 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class AIService {
+    
+    @Value("${ai.service.url}")
+    private String aiServiceUrl;
 
     private final ActivityLogService logService;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private final RestTemplate restTemplate = new RestTemplate();
-
-    private static final String AI_URL = "http://localhost:8000/extract-tasks";
 
     public List<TaskDTO> extractTasks(String transcript, String meetingId) {
 
@@ -41,8 +42,10 @@ public class AIService {
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
+            String url = aiServiceUrl + "/extract-tasks";
+
             ResponseEntity<String> response =
-                    restTemplate.postForEntity(AI_URL, entity, String.class);
+              restTemplate.postForEntity(url, entity, String.class);
 
             String body = response.getBody();
 
