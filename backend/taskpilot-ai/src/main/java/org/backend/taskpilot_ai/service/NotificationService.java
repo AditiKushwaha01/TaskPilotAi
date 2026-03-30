@@ -13,7 +13,8 @@ public class NotificationService {
 
     private final NotificationRepository repo;
 
-    public void notify(Long meetingId, Long taskId, String message, String type, String recipient) {
+    //actually sends the notification
+    public void notify(String meetingId, String taskId, String message, String type, String recipient) {
 
         try {
             Notification n = Notification.builder()

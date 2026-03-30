@@ -10,6 +10,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class NotificationController {
 
     private final NotificationRepository repo;
@@ -20,7 +21,7 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    public void markAsRead(@PathVariable Long id) {
+    public void markAsRead(@PathVariable String id) {
         Notification n = repo.findById(id).orElseThrow();
         n.setIsRead(true);
         repo.save(n);

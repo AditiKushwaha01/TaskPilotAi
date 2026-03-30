@@ -1,37 +1,41 @@
 package org.backend.taskpilot_ai.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
+
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder // 🔥 IMPORTANT
+@Document(collection = "tasks")
 public class Task {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     private String title;
+    private String description;
+
     private String owner;
+
+    private String priority;   // HIGH, MEDIUM, LOW
+    private String status;     // PENDING, COMPLETED, REJECTED
 
     private LocalDateTime deadline;
 
-    private String status; // PENDING, COMPLETED, REJECTED
+    private String userId;     // Auth0 user
+    private String meetingId;
 
-    @ManyToOne
-    @JoinColumn(name = "meeting_id")
-    @JsonBackReference
-    private Meeting meeting;
+    private Instant createdAt;
+    private Instant updatedAt;
 
-    private Boolean reminderSent = false;
-    private Boolean escalated = false;
-
+    private boolean reminderSent;
+    private boolean escalated;
 
 }

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { processMeeting } from "../services/api";
+import { createApi } from "../services/api";
+import { useAuth0 } from "@auth0/auth0-react";
 
 type Task = {
-  id?: number;
+  id?: string;
   title?: string;
   name?: string;
   owner: string;
@@ -20,7 +21,12 @@ export default function MeetingInput({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 🔥 SINGLE CLEAN HANDLER (REMOVED MOCK, NOT FEATURE)
+  // ✅ AUTH
+  const { getAccessTokenSilently } = useAuth0();
+
+  // ✅ API INSTANCE
+  const api = createApi(getAccessTokenSilently);
+
   const handleGenerate = async () => {
     if (!text.trim()) {
       setError("Please enter meeting transcript");
@@ -32,12 +38,21 @@ export default function MeetingInput({
     setSuccess(false);
 
     try {
-      const result = await processMeeting(text);
+      console.log("🔥 Calling processMeeting API...");
 
-      setTasks(result || []);
+      // ✅ FIXED CALL
+      const res = await api.processMeeting(text);
+
+      // ✅ FIXED RESPONSE HANDLING
+      const result = res?.tasks || [];
+
+      if (!Array.isArray(result)) {
+        throw new Error("Invalid response from server");
+      }
+
+      setTasks(result);
       setSuccess(true);
 
-      // 🔥 notify dashboard to refresh
       if (onTasksGenerated) {
         onTasksGenerated();
       }
@@ -70,19 +85,19 @@ export default function MeetingInput({
         {loading ? "AI is analyzing..." : "Generate Tasks"}
       </button>
 
-      {/* 🔥 ERROR */}
+      {/* ERROR */}
       {error && (
         <p className="text-red-500 text-sm mt-3">{error}</p>
       )}
 
-      {/* 🔥 SUCCESS */}
+      {/* SUCCESS */}
       {success && !loading && (
         <p className="text-green-600 text-sm mt-3">
           Tasks generated successfully
         </p>
       )}
 
-      {/* 🔥 TASK PREVIEW (KEPT YOUR FEATURE) */}
+      {/* TASK PREVIEW */}
       {tasks.length > 0 && (
         <div className="mt-4 space-y-2">
           {tasks.map((t, i) => (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getMeetings, getTasksByMeeting } from "../services/api";
+import { createApi } from "../services/api";
+import { useAuth0 } from "@auth0/auth0-react";
 import TaskTable from "./TaskTable";
 import type { Meeting, Task } from "../types/task";
 
@@ -12,6 +13,9 @@ export default function MeetingList() {
   const [expandLoading, setExpandLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const { getAccessTokenSilently } = useAuth0();
+  const api = createApi(getAccessTokenSilently);
+
   useEffect(() => {
     fetchMeetings();
   }, []);
@@ -20,7 +24,7 @@ export default function MeetingList() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getMeetings();
+      const data = await api.getMeetings();
       if (!Array.isArray(data)) throw new Error("Invalid meeting data");
       setMeetings(data);
     } catch (err: any) {
@@ -40,7 +44,7 @@ export default function MeetingList() {
 
     setExpandLoading(id);
     try {
-      const data = await getTasksByMeeting(id);
+      const data = await api.getTasksByMeeting(id);
       setTaskMap((prev) => ({ ...prev, [id]: data || [] }));
     } catch (err) {
       console.error(err);

@@ -48,12 +48,17 @@ export default function Landing() {
           </p>
 
           <div className="flex justify-center gap-3 flex-wrap">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="bg-black text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition"
-            >
+           <div className="flex justify-center gap-3 flex-wrap">
+           <button
+           onClick={() => {
+            localStorage.setItem("demoMode", "true"); // ✅ enable demo mode
+            navigate("/dashboard");
+            }}
+             className="bg-black text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition"
+             >
               Try Demo →
             </button>
+           </div>
             <button
               onClick={() => navigate("/about")}
               className="border border-gray-200 px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition text-gray-600"

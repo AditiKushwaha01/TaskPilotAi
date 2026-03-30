@@ -88,7 +88,7 @@ public class TaskAgent {
         if ("COMPLETED".equalsIgnoreCase(task.getStatus())) {
 
             notificationService.notify(
-                    task.getMeeting().getId(),
+                    task.getMeetingId(),
                     task.getId(),
                     "Task completed: " + task.getTitle(),
                     "COMPLETED",
@@ -106,7 +106,7 @@ public class TaskAgent {
 
     private void normalizeTask(Task t, Meeting meeting) {
 
-        t.setMeeting(meeting);
+        t.setMeetingId(meeting.getId());
 
         if (t.getStatus() == null) {
             t.setStatus("PENDING");

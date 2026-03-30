@@ -13,7 +13,7 @@ public class ActivityLogService {
 
     private final ActivityLogRepository activityLogRepository;
 
-    public void log(Long meetingId, String step, String action, String status) {
+    public void log(String meetingId, String step, String action, String status) {
 
         try {
             ActivityLog log = ActivityLog.builder()

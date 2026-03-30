@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Task } from "../types/task";
-import { getTasks, updateTaskStatus } from "../services/api";
+import { createApi } from "../services/api"; 
+import { useAuth0 } from "@auth0/auth0-react";
 
 type Props = {
   refresh?: number;
@@ -26,21 +27,42 @@ export default function TaskTable({ refresh, tasks: externalTasks }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const demoMode = localStorage.getItem("demoMode") === "true";
+
+  const { getAccessTokenSilently } = useAuth0();
+  const api = createApi(getAccessTokenSilently);
 
   const fetchTasks = useCallback(async () => {
-    if (externalTasks) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getTasks();
-      setTasks(data || []);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch tasks");
-    } finally {
-      setLoading(false);
-    }
-  }, [externalTasks]);
 
+  // ✅ DEMO MODE LOAD
+  if (demoMode) {
+    const stored = localStorage.getItem("demoTasks");
+    if (stored) {
+      setTasks(JSON.parse(stored));
+    } else {
+      setTasks([]);
+    }
+    return;
+  }
+
+  // 🔽 ORIGINAL CODE (UNCHANGED)
+  if (externalTasks) return;
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await api.getTasks();
+
+    const sorted = (data || []).sort((a: Task, b: Task) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    setTasks(sorted);
+  } catch (err: any) {
+    setError(err.message || "Failed to fetch tasks");
+  } finally {
+    setLoading(false);
+  }
+}, [externalTasks, demoMode]);
   useEffect(() => {
     if (externalTasks) setTasks(externalTasks);
   }, [externalTasks]);
@@ -50,16 +72,45 @@ export default function TaskTable({ refresh, tasks: externalTasks }: Props) {
   }, [fetchTasks, refresh]);
 
   const handleUpdate = async (id: number, status: Task["status"]) => {
-    setUpdatingId(id);
-    try {
-      await updateTaskStatus(id, status);
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setUpdatingId(null);
+
+  setUpdatingId(id);
+
+  // 🔥 optimistic UI
+  setTasks((prev) =>
+    prev.map((t) => (t.id === id ? { ...t, status } : t))
+  );
+
+  // ✅ DEMO MODE UPDATE
+  if (demoMode) {
+    const stored = JSON.parse(localStorage.getItem("demoTasks") || "[]");
+
+    const updated = stored.map((t: Task) =>
+      t.id === id ? { ...t, status } : t
+    );
+
+    localStorage.setItem("demoTasks", JSON.stringify(updated));
+
+    // 🔔 completion notification
+    if (status === "COMPLETED") {
+      setTimeout(() => {
+        alert("✅ Task marked as completed!");
+      }, 300);
     }
-  };
+
+    setUpdatingId(null);
+    return;
+  }
+
+  // 🔽 ORIGINAL CODE (UNCHANGED)
+  try {
+    await api.updateTaskStatus(id, status);
+  } catch (err: any) {
+    alert(err.message);
+    fetchTasks();
+  } finally {
+    setUpdatingId(null);
+  }
+};
 
   if (loading) return (
     <div className="space-y-2">

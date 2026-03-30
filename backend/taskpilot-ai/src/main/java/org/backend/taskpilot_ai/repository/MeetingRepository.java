@@ -1,7 +1,10 @@
 package org.backend.taskpilot_ai.repository;
 
 import org.backend.taskpilot_ai.model.Meeting;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface MeetingRepository extends JpaRepository<Meeting, Long> {
+import java.util.List;
+
+public interface MeetingRepository extends MongoRepository<Meeting, String> {
+    List<Meeting> findByUserId(String userId);
 }

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo} from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { processMeeting } from "../services/api";
 import type { Task } from "../types/task";
+import { createApi } from "../services/api";
+import { useAuth0 } from "@auth0/auth0-react";
 
 type Message = {
   id: string;
@@ -34,6 +35,7 @@ export default function MeetingChat({ onDone }: { onDone?: () => void }) {
   const [agentSteps, setAgentSteps] = useState<AgentStep[]>([]);
   const [showSteps, setShowSteps] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const demoMode = localStorage.getItem("demoMode") === "true";
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,10 +56,65 @@ export default function MeetingChat({ onDone }: { onDone?: () => void }) {
       setAgentSteps([...steps]);
     }
   };
+   
+  const { getAccessTokenSilently } = useAuth0();
+
+const api = useMemo(() => createApi(getAccessTokenSilently), [getAccessTokenSilently]);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
+  
+    //demo mode
+    if (demoMode) {
+  const userMsg: Message = { id: uid(), role: "user", content: input };
+  setMessages((prev) => [...prev, userMsg]);
+  setInput("");
+  setLoading(true);
+  setError(null);
+  setTasks([]);
+  setShowSteps(false);
 
+  await runAgentPipeline();
+
+  // 🎯 DEMO TASKS
+  const demoTasks: Task[] = [
+    {
+      id: 1,
+      title: "Prepare project report",
+      owner: "Alice",
+      priority: "High",
+      deadline: "2026-04-02",
+      status: "PENDING",
+    },
+    {
+      id: 2,
+      title: "Fix authentication bug",
+      owner: "Bob",
+      priority: "Medium",
+      deadline: "2026-04-01",
+      status: "PENDING",
+    },
+  ];
+
+  setTasks(demoTasks);
+
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: uid(),
+      role: "ai",
+      content: "✅ Extracted 2 tasks successfully.",
+    },
+  ]);
+
+  // 🔔 Fake notification
+  setTimeout(() => {
+    alert("🔔 Tasks assigned to Alice & Bob!");
+  }, 800);
+
+  setLoading(false);
+  return; // 🚨 VERY IMPORTANT (skip real API)
+}
     const userMsg: Message = { id: uid(), role: "user", content: input };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -68,22 +125,29 @@ export default function MeetingChat({ onDone }: { onDone?: () => void }) {
 
     try {
       await runAgentPipeline();
-      const result = await processMeeting(userMsg.content);
 
-      if (!Array.isArray(result)) throw new Error("Invalid response from AI");
+const res = await api.processMeeting(input);
 
-      setTasks(result);
+// ✅ SAFE EXTRACTION
+const tasks = Array.isArray(res?.tasks) ? res.tasks : [];
+
+if (tasks.length === 0) {
+  console.warn("⚠️ No tasks extracted, using fallback UI");
+}
+
+setTasks(tasks);
       setMessages((prev) => [
-        ...prev,
-        {
-          id: uid(),
-          role: "ai",
-          content:
-            result.length > 0
-              ? `✅ Extracted ${result.length} task${result.length > 1 ? "s" : ""}. Review below.`
-              : "No actionable tasks found. Try rephrasing with clearer ownership.",
-        },
-      ]);
+  ...prev,
+  {
+    id: uid(),
+    role: "ai",
+    content:
+      tasks.length > 0
+        ? `✅ Extracted ${tasks.length} task${tasks.length > 1 ? "s" : ""}.`
+        : "⚠️ No clear tasks found. Try a more structured transcript.",
+  },
+]);
+
     } catch (err: any) {
       setError(err.message || "Failed to process meeting");
       setMessages((prev) => [
@@ -99,15 +163,46 @@ export default function MeetingChat({ onDone }: { onDone?: () => void }) {
     }
   };
 
-  const confirmTasks = () => {
+  const confirmTasks = async () => {
+
+  // ✅ DEMO MODE SAVE
+  if (demoMode) {
+    localStorage.setItem("demoTasks", JSON.stringify(tasks));
+
     setMessages((prev) => [
       ...prev,
-      { id: uid(), role: "ai", content: "✅ Tasks created and agents are now tracking them." },
+      { id: uid(), role: "ai", content: "✅ Tasks saved successfully." },
     ]);
+
     setTasks([]);
     setShowSteps(false);
+
+    // ⏰ Reminder simulation
+    setTimeout(() => {
+      alert("⏰ Reminder: You have pending tasks!");
+    }, 4000);
+
     if (onDone) onDone();
-  };
+    return;
+  }
+
+  // 🔽 ORIGINAL CODE (UNCHANGED)
+  try {
+    await api.saveTasks(tasks);
+
+    setMessages((prev) => [
+      ...prev,
+      { id: uid(), role: "ai", content: "✅ Tasks saved successfully." },
+    ]);
+
+    setTasks([]);
+    setShowSteps(false);
+
+    if (onDone) onDone();
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const statusIcon = (s: AgentStep["status"]) => {
     if (s === "done") return <span className="text-green-500 text-xs">✓</span>;

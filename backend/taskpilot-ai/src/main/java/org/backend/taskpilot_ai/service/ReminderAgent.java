@@ -3,6 +3,7 @@ package org.backend.taskpilot_ai.service;
 import lombok.RequiredArgsConstructor;
 import org.backend.taskpilot_ai.model.Task;
 import org.backend.taskpilot_ai.repository.TaskRepository;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +11,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@EnableScheduling
 @RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class ReminderAgent {
 
     private final TaskRepository repo;
@@ -21,7 +24,14 @@ public class ReminderAgent {
     @Scheduled(fixedRate = 60000) // every 1 min
     public void checkDeadlines() {
 
-        List<Task> tasks = repo.findAll(); // later optimize query
+        //step check
+        System.out.println("🔥 ReminderAgent RUNNING 🔥");
+
+        //optimized query
+        List<Task> tasks = repo.findByDeadlineBeforeAndStatusNotIgnoreCase(
+                LocalDateTime.now().plusHours(24),
+                "COMPLETED"
+        );
 
         for (Task t : tasks) {
             try {
@@ -37,7 +47,7 @@ public class ReminderAgent {
 
             } catch (Exception e) {
                 logService.log(
-                        t.getMeeting().getId(),
+                        t.getMeetingId(),
                         "REMINDER_AGENT",
                         "Error processing task: " + t.getTitle(),
                         "FAILED"
@@ -57,7 +67,7 @@ public class ReminderAgent {
         if (!"PENDING".equalsIgnoreCase(t.getStatus())) return false;
 
         // Already reminded (CRITICAL)
-        if (Boolean.TRUE.equals(t.getReminderSent())) return false;
+        if (Boolean.TRUE.equals(t.isReminderSent())) return false;
 
         // Within next 24 hours
         return t.getDeadline().isBefore(LocalDateTime.now().plusHours(24));
@@ -71,14 +81,14 @@ public class ReminderAgent {
 
         // log action
         logService.log(
-                t.getMeeting().getId(),
+                t.getMeetingId(),
                 "REMINDER_AGENT",
                 "Reminder sent for task: " + t.getTitle(),
                 "SUCCESS"
         );
 
         notificationService.notify(
-                t.getMeeting().getId(),
+                t.getMeetingId(),
                 t.getId(),
                 "Reminder: Task nearing deadline - " + t.getTitle(),
                 "REMINDER",
@@ -86,6 +96,11 @@ public class ReminderAgent {
         );
 
         System.out.println("Reminder sent: " + t.getTitle());
+    }
+    @Scheduled(fixedRate = 120000) // every 2 minutes
+    public void runEscalation() {
+        System.out.println("⏫ EscalationAgent running...");
+        escalationAgent.processOverdueTasks();
     }
 
 }

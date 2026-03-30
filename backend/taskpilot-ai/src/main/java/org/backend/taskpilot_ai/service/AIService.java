@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.backend.taskpilot_ai.dto.TaskDTO;
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -24,13 +23,15 @@ public class AIService {
 
     private static final String AI_URL = "http://localhost:8000/extract-tasks";
 
-    public List<TaskDTO> extractTasks(String transcript) {
+    public List<TaskDTO> extractTasks(String transcript, String meetingId) {
 
         if (transcript == null || transcript.trim().isEmpty()) {
             throw new RuntimeException("Transcript cannot be empty");
         }
 
         try {
+            logService.log(meetingId, "AI_AGENT", "Sending request to AI", "STARTED");
+
             String requestJson = mapper.writeValueAsString(
                     Map.of("transcript", transcript)
             );
@@ -43,16 +44,38 @@ public class AIService {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(AI_URL, entity, String.class);
 
-            return parseTasks(response.getBody());
+            String body = response.getBody();
+
+            System.out.println("🤖 AI RAW RESPONSE: " + body);
+
+            logService.log(null, "AI_AGENT", "AI response received", "SUCCESS");
+
+            return parseTasks(body);
 
         } catch (Exception e) {
 
-            // 🔥 FALLBACK TRIGGER
-            return fallbackExtract(transcript);
+            System.out.println("⚠️ AI FAILED: " + e.getMessage());
+
+            logService.log(null, "AI_AGENT",
+                    "AI failed: " + e.getMessage(),
+                    "FAILED"
+            );
+
+            // fallback WITH LOG
+            List<TaskDTO> fallback = fallbackExtract(transcript);
+
+            logService.log(null, "AI_AGENT",
+                    "Fallback used. Tasks: " + fallback.size(),
+                    "WARNING"
+            );
+
+            return fallback;
         }
     }
-
     public List<TaskDTO> fallbackExtract(String transcript) {
+
+        //step check
+        System.out.println("⚙️ Using fallback extraction...");
 
         List<TaskDTO> tasks = new ArrayList<>();
 

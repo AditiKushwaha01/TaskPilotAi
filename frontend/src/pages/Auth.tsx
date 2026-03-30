@@ -1,10 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
+
+  // ✅ Auth0 hooks
+  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
+
+  // ✅ Redirect after login
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
+
+  // ✅ Show loading while Auth0 initializes
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -12,7 +32,6 @@ export default function Auth() {
 
         {/* LEFT PANEL */}
         <div className="hidden md:flex flex-col justify-center items-center bg-black text-white p-10 relative overflow-hidden">
-          {/* BG decoration */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-8 left-8 w-32 h-32 rounded-full border border-white" />
             <div className="absolute bottom-16 right-8 w-48 h-48 rounded-full border border-white" />
@@ -72,30 +91,41 @@ export default function Auth() {
                 {isLogin ? "Log In" : "Sign Up"}
               </h2>
               <p className="text-sm text-gray-400 mb-6">
-                {isLogin ? "Enter your credentials to continue." : "Create your free account."}
+                {isLogin ? "Continue with secure authentication." : "Create your free account securely."}
               </p>
 
+              {/* 🔥 IMPORTANT: Inputs are now UI only */}
               <div className="space-y-3">
                 {!isLogin && (
                   <input
                     type="text"
                     placeholder="Full Name"
-                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                    className="w-full p-3 border border-gray-200 rounded-xl text-sm"
+                    disabled
                   />
                 )}
                 <input
                   type="email"
                   placeholder="Email address"
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm"
+                  disabled
                 />
                 <input
                   type="password"
                   placeholder="Password"
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm"
+                  disabled
                 />
 
+                {/* ✅ REAL AUTH BUTTON */}
                 <button
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() =>
+                    loginWithRedirect({
+                      authorizationParams: isLogin
+                        ? {}
+                        : { screen_hint: "signup" },
+                    })
+                  }
                   className="w-full bg-black text-white py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition"
                 >
                   {isLogin ? "Log In" : "Create Account"} →

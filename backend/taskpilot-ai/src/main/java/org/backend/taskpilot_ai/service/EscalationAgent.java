@@ -19,7 +19,10 @@ public class EscalationAgent {
     public void processOverdueTasks() {
 
         // 🔥 Optimized query (replace findAll later in repo)
-        List<Task> tasks = taskRepository.findAll();
+        List<Task> tasks = taskRepository.findByDeadlineBeforeAndStatusNotIgnoreCase(
+                LocalDateTime.now(),
+                "COMPLETED"
+        );
 
         for (Task task : tasks) {
             try {
@@ -28,8 +31,8 @@ public class EscalationAgent {
                 }
             } catch (Exception e) {
 
-                Long meetingId = (task != null && task.getMeeting() != null)
-                        ? task.getMeeting().getId()
+                String meetingId = (task != null && task.getMeetingId() != null)
+                        ? task.getMeetingId()
                         : null;
 
                 logService.log(
@@ -50,7 +53,7 @@ public class EscalationAgent {
 
         if ("COMPLETED".equalsIgnoreCase(task.getStatus())) return false;
 
-        if (Boolean.TRUE.equals(task.getEscalated())) return false;
+        if (Boolean.TRUE.equals(task.isEscalated())) return false;
 
         return task.getDeadline().isBefore(LocalDateTime.now());
     }
@@ -59,8 +62,8 @@ public class EscalationAgent {
 
         if (task == null) return;
 
-        Long meetingId = (task.getMeeting() != null)
-                ? task.getMeeting().getId()
+        String meetingId = (task.getMeetingId() != null)
+                ? task.getMeetingId()
                 : null;
 
         // ✅ Mark escalated
