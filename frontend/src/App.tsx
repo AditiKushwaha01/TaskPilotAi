@@ -3,10 +3,8 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
-import { useState } from "react";
 
 export default function App() {
-  const [demoMode, setDemoMode] = useState(false); // ✅ moved inside
 
   return (
     <BrowserRouter>
@@ -16,7 +14,7 @@ export default function App() {
         {/* ✅ ONLY ONE DASHBOARD ROUTE */}
         <Route
           path="/dashboard"
-          element={<Dashboard demoMode={demoMode} />}
+          element={<Dashboard/>}
         />
 
         <Route path="/about" element={<About />} />

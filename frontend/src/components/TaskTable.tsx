@@ -5,9 +5,10 @@ import { createApi } from "../services/api";
 import { useAuth0 } from "@auth0/auth0-react";
 
 type Props = {
-  refresh?: number;
-  tasks?: Task[];
-};
+  tasks: Task[]
+  refresh: number
+  onUpdate: () => void
+}
 
 const STATUS_STYLES: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-700",
@@ -22,7 +23,7 @@ const PRIORITY_STYLES: Record<string, string> = {
   Low: "bg-green-50 text-green-600",
 };
 
-export default function TaskTable({ refresh, tasks: externalTasks }: Props) {
+export default function TaskTable({ refresh, tasks: externalTasks, onUpdate }: Props) {
   const [tasks, setTasks] = useState<Task[]>(externalTasks || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,16 +54,21 @@ export default function TaskTable({ refresh, tasks: externalTasks }: Props) {
     const data = await api.getTasks();
 
     const sorted = (data || []).sort((a: Task, b: Task) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+  const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+  const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+
+  return dateB - dateA;
+});
 
     setTasks(sorted);
-  } catch (err: any) {
-    setError(err.message || "Failed to fetch tasks");
+  } catch (err: unknown) {
+  const message = err instanceof Error ? err.message : "Error";
+  setError(message);
   } finally {
     setLoading(false);
   }
-}, [externalTasks, demoMode]);
+}, [externalTasks, demoMode, api]);
+
   useEffect(() => {
     if (externalTasks) setTasks(externalTasks);
   }, [externalTasks]);
@@ -104,11 +110,13 @@ export default function TaskTable({ refresh, tasks: externalTasks }: Props) {
   // 🔽 ORIGINAL CODE (UNCHANGED)
   try {
     await api.updateTaskStatus(id, status);
-  } catch (err: any) {
-    alert(err.message);
+  } catch (err: unknown) {
+  const message = err instanceof Error ? err.message : "Error";
+  setError(message);
     fetchTasks();
   } finally {
     setUpdatingId(null);
+    onUpdate();
   }
 };
 

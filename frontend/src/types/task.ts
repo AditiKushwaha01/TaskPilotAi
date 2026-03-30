@@ -8,6 +8,7 @@ export type Task = {
   status: TaskStatus;
   deadline?: string;
   priority?: "Low" | "Medium" | "High";
+  createdAt?: string;
 };
 
 export type Meeting = {
