@@ -1,7 +1,5 @@
-import { useNavigate } from "react-router-dom";
 
 export default function Topbar() {
-  const navigate = useNavigate();
 
   return (
     <div className="flex justify-between p-4 border-b">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createApi } from "../services/api";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -16,23 +16,24 @@ export default function MeetingList() {
   const { getAccessTokenSilently } = useAuth0();
   const api = createApi(getAccessTokenSilently);
 
-  useEffect(() => {
-    fetchMeetings();
-  }, []);
+  const fetchMeetings = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await api.getMeetings();
+    if (!Array.isArray(data)) throw new Error("Invalid meeting data");
+    setMeetings(data);
+  } catch (err: any) {
+    setError(err.message || "Failed to load meetings");
+  } finally {
+    setLoading(false);
+  }
+}, [api]);
 
-  const fetchMeetings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.getMeetings();
-      if (!Array.isArray(data)) throw new Error("Invalid meeting data");
-      setMeetings(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load meetings");
-    } finally {
-      setLoading(false);
-    }
-  };
+useEffect(() => {
+    fetchMeetings();
+  }, [fetchMeetings]);
+
 
   const toggleMeeting = async (id: number) => {
     if (expanded === id) {
@@ -108,7 +109,10 @@ export default function MeetingList() {
                   {expandLoading === m.id ? (
                     <p className="text-sm text-gray-400 animate-pulse">Loading tasks…</p>
                   ) : (
-                    <TaskTable tasks={taskMap[m.id] || []} />
+                    <TaskTable tasks={taskMap[m.id] || []} 
+                    refresh={0}
+                    onUpdate={() => {}}
+                     />
                   )}
                 </div>
               </motion.div>

@@ -130,7 +130,7 @@ Database (MongoDB)
 5. Reminder Agent monitors deadlines
 6. Escalation Agent handles delays
 7. Audit Agent logs all actions
-8. 
+
 ---
 
 ## 📦 Setup Instructions
